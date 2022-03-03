@@ -6,4 +6,4 @@ This solution was created by our team (a union of the teams "Nagibators" and "Eb
   * [Daniil Kikimov](https://github.com/katsushooter) (Nagibators, Web Expert)
   * [Alexander Petrov](https://github.com/Leto-Osen228) (Ebyte, Arduino & Schematics Expert)
   * [Nikita Syshchikov](https://github.com/furperson) (Ebyte, Arduino & Schematics Expert)
-  * [Andrey Karabanov](https://github.com/forafox) (Ebyte, Schematics Expert)
+  * [Andrey Karabanov](https://github.com/forafox) (Ebyte,Arduino & Schematics Expert)
