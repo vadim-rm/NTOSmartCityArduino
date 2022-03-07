@@ -1,6 +1,6 @@
 # NTOSmartCity Arduino Repository
 This repository contains the code for the Arduino of the Nagibyte team solution on the National Technology Olympiad
-A code for the web part available in [NTOSmartCityWeb](https://github.com/vadim-rm/NTOSmartCityWeb) repository
+A code for the mobile part available in [NTOSmartCityMobile](https://github.com/vadim-rm/NTOSmartCityMobile) repository
 
 This solution was created by our team (a union of the teams "Nagibators" and "Ebyte"):
   * [Vadim Mazhitov](https://github.com/vadim-rm) (Nagibators, Web & Arduino Expert)
