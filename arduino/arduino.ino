@@ -38,8 +38,8 @@ Servo lock1;
 Servo lock2;
 Servo lock3;
 
-uint8_t staffCardId[4]  = {0x89, 0x54, 0xA8, 0x99};
-uint8_t personIdCard[4] = {0x89, 0x54, 0xA8, 0x99};
+uint8_t staffCardId[4]  = {0x89, 0x54, 0xA8, 0x99}; // TODO.
+uint8_t personIdCard[4] = {0x89, 0x54, 0xA8, 0x99}; // TODO.
 
 enum User {
   unknown,
@@ -140,7 +140,15 @@ User getNfcUser() {
   success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
 
   if (success) {
+    Serial.println("Found a card");
+    Serial.print("ID Length: ");
+    Serial.print(uidLength, DEC);
+    Serial.println(" bytes");
+    Serial.print("ID Value: ");
+    nfc.PrintHex(uid, uidLength);
+
     bool ok = true;
+    // TODO.         ||
     if (uidLength == 4) {
       if (compareUids(uid, staffCardId)) {
         user = staff;
