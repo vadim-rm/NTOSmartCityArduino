@@ -201,7 +201,7 @@ void initNFC() {
 void setup() {
   Serial.begin(9600);
 
-  wifi.begin(11200);
+  wifi.begin(115200);
   lock1.attach(SERVO_1_PIN);
   lock2.attach(SERVO_2_PIN);
   lock3.attach(SERVO_3_PIN);
@@ -254,14 +254,18 @@ void updateOverfillOnDisplay() {
 void loop() {
   User currentUser = getNfcUser();
   if (currentUser == staff) {
-    wifi.print(userLogIn + "1:");
+    wifi.print(userLogIn + "staff:");
     locksOpened[0] = true;
     locksOpened[1] = true;
     locksOpened[2] = true;
+
+    trashOverfill[0] = false;
+    trashOverfill[1] = false;
+    trashOverfill[2] = false;
   } else if (currentUser == person) {
-    wifi.print(userLogIn + "2:");
+    wifi.print(userLogIn + "person:");
     personSignedIn = true;
-  } else if (currentUser == unknown) wifi.print(userLogIn + "3:");
+  } else if (currentUser == unknown) wifi.print(userLogIn + "unknown:");
 
   if (personSignedIn) {
     Serial.println("PersonSignedIn = TRUE: Waiting for the garbage");
