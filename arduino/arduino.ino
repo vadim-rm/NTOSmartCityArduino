@@ -48,6 +48,7 @@ enum User {
 };
 
 bool locksOpened[3] = {false, false, false};
+bool locksActuallyOpened[3] = {false, false, false};
 unsigned int locksOpenedAt[3] = {0, 0, 0};
 
 bool garbageAllowed[3] = {false, false, false};
@@ -61,10 +62,12 @@ void updateColorSensorsValues() {
   if (true) garbageAllowed[0] = true;
   if (true) garbageAllowed[1] = true;
   if (true) garbageAllowed[2] = true;
+
+  if (!(true || true || true)) toggleMatrix(true);
 }
 
-// TODO. Get data from light sensors
-void updateLightSensorsValues() {
+// TODO. Get data from distance sensors
+void updateDistanceSensorsValues() {
   if (true && !trashOverfill[0]) {
     trashOverfill[0] = true;
     wifi.print(updateOverfilled + "0!");
@@ -97,35 +100,47 @@ void updateLocks() {
   if (millis() - locksOpenedAt[0] > LOCK_CLOSING_TIMEOUT && locksOpened[0]) {
     locksOpened[0] = false;
     personSignedIn = false;
-    updateLightSensorsValues();
+    updateDistanceSensorsValues();
   }
 
   if (millis() - locksOpenedAt[1] > LOCK_CLOSING_TIMEOUT && locksOpened[1]) {
     locksOpened[1] = false;
     personSignedIn = false;
-    updateLightSensorsValues();
+    updateDistanceSensorsValues();
   }
 
   if (millis() - locksOpenedAt[2] > LOCK_CLOSING_TIMEOUT && locksOpened[2]) {
     locksOpened[2] = false;
     personSignedIn = false;
-    updateLightSensorsValues();
+    updateDistanceSensorsValues();
   }
 
-  if (locksOpened[0]) {
+  if (locksOpened[0] && !locksActuallyOpened[0]) {
     locksOpenedAt[0] = millis();
+    locksActuallyOpened[0] = true;
     lock1.write(90);
-  } else lock1.write(0);
+  } else {
+    lock1.write(0);
+    locksActuallyOpened[0] = false;
+  }
 
-  if (locksOpened[1]) {
+  if (locksOpened[1] && !locksActuallyOpened[1]) {
     locksOpenedAt[1] = millis();
+    locksActuallyOpened[1] = true;
     lock2.write(90);
-  } else lock2.write(0);
+  } else {
+    lock2.write(0);
+    locksActuallyOpened[1] = false;
+  }
 
-  if (locksOpened[2]) {
+  if (locksOpened[2] && !locksActuallyOpened[2]) {
     locksOpenedAt[2] = millis();
+    locksActuallyOpened[2] = true;
     lock3.write(90);
-  } else lock3.write(0);
+  } else {
+    lock3.write(0);
+    locksActuallyOpened[2] = false;
+  }
 }
 
 User getNfcUser() {
@@ -200,6 +215,11 @@ void handleBluetooth() {
 
 }
 
+// TODO. Toggle matrix
+void toggleMatrix(bool turnedOn) {
+  
+}
+
 void showMaintainingModeOnDisplay() {
   display.clearDisplay();
   display.setFont(font6x8);
@@ -246,7 +266,7 @@ void loop() {
   if (personSignedIn) {
     Serial.println("PersonSignedIn = TRUE: Waiting for the garbage");
     updateColorSensorsValues();
-    updateLightSensorsValues();
+    updateDistanceSensorsValues();
 
     if (garbageAllowed[0] && !trashOverfill[0] && !locksOpened[0]) {
       locksOpened[0] = true;
@@ -262,6 +282,8 @@ void loop() {
       locksOpened[2] = true;
       wifi.print(addTrash);
     }
+  } else {
+    toggleMatrix(false);
   }
 
   if (wifi.available()) {
