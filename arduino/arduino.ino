@@ -20,7 +20,7 @@
 
 TroykaOLED myOLED(0x3C);
 
-#define OVERFILLED_SETTING 17
+#define OVERFILLED_SETTING 21
 
 #define bluetooth Serial2
 #define wifi Serial3
@@ -137,27 +137,41 @@ void updateColorSensorsValues() {
 
 void updateDistanceSensorsValues() {
   Serial.print("OVERFILL CHECK: ");
-  if (checkIfOverFilledBySensor(distanceSensor1) && !trashOverfill[0]) {
+  bool firstOverfilled = checkIfOverFilledBySensor(distanceSensor1);
+  bool secondOverfilled = checkIfOverFilledBySensor(distanceSensor2);
+  bool thirdOverfilled = checkIfOverFilledBySensor(distanceSensor3);
+  
+  if (firstOverfilled && !trashOverfill[0]) {
     trashOverfill[0] = true;
     wifi.print(updateOverfilled + "0!");
+    updateOverfillOnDisplay();
+  } else if (!firstOverfilled && trashOverfill[0]) {
+    trashOverfill[0] = false;
     updateOverfillOnDisplay();
   }
 
   Serial.print(trashOverfill[0]);
   Serial.print(" | ");
-  if (checkIfOverFilledBySensor(distanceSensor2) && !trashOverfill[1]) {
+  if (secondOverfilled && !trashOverfill[1]) {
     trashOverfill[1] = true;
     wifi.print(updateOverfilled + "1!");
+    updateOverfillOnDisplay();
+  } else if (!secondOverfilled && trashOverfill[1]) {
+    trashOverfill[1] = false;
     updateOverfillOnDisplay();
   }
 
   Serial.print(trashOverfill[1]);
   Serial.print(" | ");
-  if (checkIfOverFilledBySensor(distanceSensor3) && !trashOverfill[2]) {
+  if (thirdOverfilled && !trashOverfill[2]) {
     trashOverfill[2] = true;
     wifi.print(updateOverfilled + "2!");
     updateOverfillOnDisplay();
+  } else if (!thirdOverfilled && trashOverfill[2]) {
+    trashOverfill[2] = false;
+    updateOverfillOnDisplay();
   }
+  
   Serial.print(trashOverfill[2]);
   Serial.println();
 }
