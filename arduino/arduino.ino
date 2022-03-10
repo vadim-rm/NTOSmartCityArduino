@@ -16,13 +16,18 @@
 #include <Servo.h>
 #include <TroykaOLED.h>
 #include "Adafruit_TCS34725softi2c.h"
+#include "SparkFun_VL6180X.h"
 
 TroykaOLED myOLED(0x3C);
+
+#define OVERFILLED_SETTING 17
 
 #define bluetooth Serial2
 #define wifi Serial3
 
 #define LOCK_CLOSING_TIMEOUT 5000
+
+#define VL6180X_ADDRESS 0x29
 
 #define SERVO_1_PIN 5
 #define SERVO_2_PIN 7
@@ -33,6 +38,10 @@ TroykaOLED myOLED(0x3C);
 #define COLOR_3 32, 33
 #define COLOR_BACKLIGHT 27
 
+#define DISTANCE_1 34, 35
+#define DISTANCE_2 36, 37
+#define DISTANCE_3 38, 39
+
 #define RFID_TRIG_PIN 22
 
 #define NUM_LEDS 16
@@ -42,6 +51,14 @@ Adafruit_PN532 nfc(RFID_TRIG_PIN, 100);
 Adafruit_TCS34725softi2c colorSensor1 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X, COLOR_1);
 Adafruit_TCS34725softi2c colorSensor2 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X, COLOR_2);
 Adafruit_TCS34725softi2c colorSensor3 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X, COLOR_3);
+
+SoftwareWire distanceWire1(DISTANCE_1);
+SoftwareWire distanceWire2(DISTANCE_2);
+SoftwareWire distanceWire3(DISTANCE_3);
+
+VL6180x distanceSensor1(VL6180X_ADDRESS);
+VL6180x distanceSensor2(VL6180X_ADDRESS);
+VL6180x distanceSensor3(VL6180X_ADDRESS);
 
 CRGB leds[NUM_LEDS];
 
@@ -73,16 +90,41 @@ bool trashOverfill[3]  = {false, false, false};
 bool personSignedIn = false;
 bool lockedForMaintaining = false;
 
+void initDistanceSensors() {
+  distanceWire1.begin();
+  distanceSensor1.VL6180xInit(&distanceWire1);
+  distanceSensor1.VL6180xDefautSettings();
+
+  distanceWire2.begin();
+  distanceSensor2.VL6180xInit(&distanceWire2);
+  distanceSensor2.VL6180xDefautSettings();
+
+  distanceWire3.begin();
+  distanceSensor3.VL6180xInit(&distanceWire3);
+  distanceSensor3.VL6180xDefautSettings();
+}
+
+bool checkIfOverFilledBySensor(VL6180x sensor) {
+  uint16_t value = sensor.getDistance();
+  Serial.print("DIST: ");
+  Serial.print(value);
+  Serial.print("  ");
+  bool overfilled = value <= OVERFILLED_SETTING;
+  
+  return overfilled;
+}
+
 void updateColorSensorsValues() {
+  Serial.print("COLORS: 1: ");
   bool firstSensorColorMatched  = getColorSensorValues(colorSensor1, 120, 180); // RED
+  Serial.print(" | 2: ");
   bool secondSensorColorMatched = getColorSensorValues(colorSensor2, -5, 60); // YELLOW
+  Serial.print(" | 3: ");
   bool thirdSensorColorMatched  = getColorSensorValues(colorSensor3, -50, -30); // GREEN
 
-  Serial.print("1: ");
+  Serial.print(" || ");
   Serial.print(firstSensorColorMatched);
-  Serial.print(" || 2: ");
   Serial.print(secondSensorColorMatched);
-  Serial.print(" || 3: ");
   Serial.println(thirdSensorColorMatched);
   
   garbageAllowed[0] = firstSensorColorMatched;
@@ -93,25 +135,31 @@ void updateColorSensorsValues() {
   if (firstSensorColorMatched || secondSensorColorMatched || thirdSensorColorMatched) toggleMatrix(false);
 }
 
-// TODO. Get data from distance sensors
 void updateDistanceSensorsValues() {
-  if (false && !trashOverfill[0]) {
+  Serial.print("OVERFILL CHECK: ");
+  if (checkIfOverFilledBySensor(distanceSensor1) && !trashOverfill[0]) {
     trashOverfill[0] = true;
     wifi.print(updateOverfilled + "0!");
     updateOverfillOnDisplay();
   }
 
-  if (false && !trashOverfill[1]) {
+  Serial.print(trashOverfill[0]);
+  Serial.print(" | ");
+  if (checkIfOverFilledBySensor(distanceSensor2) && !trashOverfill[1]) {
     trashOverfill[1] = true;
     wifi.print(updateOverfilled + "1!");
     updateOverfillOnDisplay();
   }
 
-  if (false && !trashOverfill[2]) {
+  Serial.print(trashOverfill[1]);
+  Serial.print(" | ");
+  if (checkIfOverFilledBySensor(distanceSensor3) && !trashOverfill[2]) {
     trashOverfill[2] = true;
     wifi.print(updateOverfilled + "2!");
     updateOverfillOnDisplay();
   }
+  Serial.print(trashOverfill[2]);
+  Serial.println();
 }
 
 bool compareUids(uint8_t* a, uint8_t* b) {
@@ -253,6 +301,7 @@ void setup() {
   lock3.attach(SERVO_3_PIN);
 
   initNFC();
+  initDistanceSensors();
   myOLED.begin();
   updateOverfillOnDisplay();
 
@@ -329,7 +378,7 @@ void loop() {
   if (personSignedIn) {
     Serial.println("PersonSignedIn = TRUE: Waiting for the garbage");
     updateColorSensorsValues();
-    updateDistanceSensorsValues();
+    //updateDistanceSensorsValues();
 
     if (garbageAllowed[0] && !trashOverfill[0] && !locksOpened[0]) {
       locksOpened[0] = true;
@@ -361,4 +410,5 @@ void loop() {
   }
 
   updateLocks();
+  Serial.println();
 }
