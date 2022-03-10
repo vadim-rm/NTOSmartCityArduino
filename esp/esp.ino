@@ -1,12 +1,12 @@
 #include <ESP8266WiFi.h>  //Библиотека для работы с WIFI
-#include <ArduinoOTA.h>   // Библиотека для OTA-прошивки
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 
 WiFiClient wifiClient;
-const char* ssid = "TP-Link_1825";  //Имя точки доступа WIFI
-const char* password = "04968221";  //пароль точки доступа WIFI
+
+const char* ssid = "ZyXEL_KEENETIC_LITE_3F992B";  //Имя точки доступа WIFI
+const char* password = "123456789";  //пароль точки доступа WIFI
 
 String buffer;
 
@@ -51,6 +51,6 @@ void loop() {
     http.GET();
     String payload = http.getString();
     http.end();
-    Serial.print(payload);
+    Serial.print(int(payload == "true"));
   }
 }
