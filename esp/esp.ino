@@ -8,6 +8,9 @@ WiFiClient wifiClient;
 const char* ssid = "ZyXEL_KEENETIC_LITE_3F992B";  //Имя точки доступа WIFI
 const char* password = "123456789";  //пароль точки доступа WIFI
 
+char* host = "192.168.1.43";
+uint16_t port = 5000;
+
 String buffer;
 
 unsigned int lastUpdateTime = 0;
@@ -38,6 +41,12 @@ void loop() {
       http.begin(wifiClient, "http://arduino.vadimrm.tk" + buffer);
       http.GET();
       http.end();
+      buffer = "";
+    } else if (c == '*') {
+      if (wifiClient.connect(host, port)) {
+        wifiClient.print(buffer);
+        wifiClient.stop();
+      }
       buffer = "";
     } else {
       buffer += c;
