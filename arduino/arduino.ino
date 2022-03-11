@@ -88,6 +88,7 @@ bool garbageAllowed[3] = {false, false, false};
 bool trashOverfill[3]  = {false, false, false};
 
 bool personSignedIn = false;
+bool staffSignedIn = false;
 bool lockedForMaintaining = false;
 
 void initDistanceSensors() {
@@ -120,7 +121,7 @@ void updateColorSensorsValues() {
   Serial.print(" | 2: ");
   bool secondSensorColorMatched = getColorSensorValues(colorSensor2, -5, 60); // YELLOW
   Serial.print(" | 3: ");
-  bool thirdSensorColorMatched  = getColorSensorValues(colorSensor3, -50, -30); // GREEN
+  bool thirdSensorColorMatched  = getColorSensorValues(colorSensor3, -200, -30); // GREEN
 
   Serial.print(" || ");
   Serial.print(firstSensorColorMatched);
@@ -131,7 +132,7 @@ void updateColorSensorsValues() {
   garbageAllowed[1] = secondSensorColorMatched;
   garbageAllowed[2] = thirdSensorColorMatched;
 
-  if (!firstSensorColorMatched && !secondSensorColorMatched && !thirdSensorColorMatched) toggleMatrix(true);
+  if (!firstSensorColorMatched && !secondSensorColorMatched && !thirdSensorColorMatched && !locksOpened[0] && !locksOpened[1] && !locksOpened[2]) toggleMatrix(true);
   if (firstSensorColorMatched || secondSensorColorMatched || thirdSensorColorMatched) toggleMatrix(false);
 }
 
@@ -143,9 +144,9 @@ void updateDistanceSensorsValues() {
   
   if (firstOverfilled && !trashOverfill[0]) {
     trashOverfill[0] = true;
-    wifi.print(updateOverfilled + "0!");
+    wifi.print(updateOverfilled + "1!");
     updateOverfillOnDisplay();
-  } else if (!firstOverfilled && trashOverfill[0]) {
+  } else if (!firstOverfilled && staffSignedIn) {
     trashOverfill[0] = false;
     updateOverfillOnDisplay();
   }
@@ -154,9 +155,9 @@ void updateDistanceSensorsValues() {
   Serial.print(" | ");
   if (secondOverfilled && !trashOverfill[1]) {
     trashOverfill[1] = true;
-    wifi.print(updateOverfilled + "1!");
+    wifi.print(updateOverfilled + "2!");
     updateOverfillOnDisplay();
-  } else if (!secondOverfilled && trashOverfill[1]) {
+  } else if (!secondOverfilled && staffSignedIn) {
     trashOverfill[1] = false;
     updateOverfillOnDisplay();
   }
@@ -165,9 +166,9 @@ void updateDistanceSensorsValues() {
   Serial.print(" | ");
   if (thirdOverfilled && !trashOverfill[2]) {
     trashOverfill[2] = true;
-    wifi.print(updateOverfilled + "2!");
+    wifi.print(updateOverfilled + "3!");
     updateOverfillOnDisplay();
-  } else if (!thirdOverfilled && trashOverfill[2]) {
+  } else if (!thirdOverfilled && staffSignedIn) {
     trashOverfill[2] = false;
     updateOverfillOnDisplay();
   }
@@ -189,19 +190,25 @@ void updateLocks() {
   if (millis() - locksOpenedAt[0] > LOCK_CLOSING_TIMEOUT && locksActuallyOpened[0]) {
     locksOpened[0] = false;
     personSignedIn = false;
+    
     updateDistanceSensorsValues();
+    staffSignedIn = false;
   }
 
   if (millis() - locksOpenedAt[1] > LOCK_CLOSING_TIMEOUT && locksActuallyOpened[1]) {
     locksOpened[1] = false;
     personSignedIn = false;
+
     updateDistanceSensorsValues();
+    staffSignedIn = false;
   }
 
   if (millis() - locksOpenedAt[2] > LOCK_CLOSING_TIMEOUT && locksActuallyOpened[2]) {
     locksOpened[2] = false;
     personSignedIn = false;
+    
     updateDistanceSensorsValues();
+    staffSignedIn = false;
   }
 
   if (locksOpened[0] && !locksActuallyOpened[0]) {
@@ -351,6 +358,7 @@ void showMaintainingModeOnDisplay() {
 void updateOverfillOnDisplay() {
   myOLED.clearDisplay();
   myOLED.setFont(font6x8);
+  Serial.println("UPDATE DISPLAY");
 
   myOLED.print("СONTAINERS STATUS", OLED_CENTER, 10);
 
@@ -375,8 +383,8 @@ void updateOverfillOnDisplay() {
 
 void loop() {
   User currentUser = getNfcUser();
-  if (currentUser == staff) {
-    wifi.print(userLogIn + "staff:");
+  if (currentUser == staff && !staffSignedIn) {
+    wifi.print(userLogIn + "1:");
     locksOpened[0] = true;
     locksOpened[1] = true;
     locksOpened[2] = true;
@@ -384,10 +392,11 @@ void loop() {
     trashOverfill[0] = false;
     trashOverfill[1] = false;
     trashOverfill[2] = false;
-  } else if (currentUser == person) {
-    wifi.print(userLogIn + "person:");
+    staffSignedIn = true;
+  } else if (currentUser == person && !lockedForMaintaining) {
+    wifi.print(userLogIn + "2:");
     personSignedIn = true;
-  } else if (currentUser == unknown) wifi.print(userLogIn + "unknown:");
+  } else if (currentUser == unknown) {};
 
   if (personSignedIn) {
     Serial.println("PersonSignedIn = TRUE: Waiting for the garbage");
@@ -424,5 +433,4 @@ void loop() {
   }
 
   updateLocks();
-  Serial.println();
 }
