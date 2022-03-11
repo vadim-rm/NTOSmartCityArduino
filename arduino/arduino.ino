@@ -317,6 +317,7 @@ void setup() {
   digitalWrite(COLOR_BACKLIGHT, HIGH);
 
   wifi.begin(115200);
+  bluetooth.begin(9600);
   lock1.attach(SERVO_1_PIN);
   lock2.attach(SERVO_2_PIN);
   lock3.attach(SERVO_3_PIN);
@@ -335,9 +336,15 @@ void setup() {
   Serial.println("Init completed");
 }
 
-// TODO. Handle Bluetooth
 void handleBluetooth() {
+  lastBTSendTime = millis();
+  if (getColorSensorValues(colorSensor1, 120, 180)) bluetooth.print("a");
+  if (getColorSensorValues(colorSensor2, -5, 60)) bluetooth.print("b");
+  if (getColorSensorValues(colorSensor3, -200, -30)) bluetooth.print("c");
 
+  if (checkIfOverFilledBySensor(distanceSensor1)) bluetooth.print("1");
+  if (checkIfOverFilledBySensor(distanceSensor2)) bluetooth.print("2");
+  if (checkIfOverFilledBySensor(distanceSensor3)) bluetooth.print("3");
 }
 
 void toggleMatrix(bool turnedOn) {
@@ -430,6 +437,14 @@ void loop() {
 
     lockedForMaintaining = newLockedForMaintaining;
     wifi.flush();
+  }
+
+  if (bluetooth.available()) {
+      char c = bluetooth.read();
+
+      locksOpened[0] = true;
+      locksOpened[1] = true;
+      locksOpened[2] = true;
   }
 
   updateLocks();
