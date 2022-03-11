@@ -26,6 +26,7 @@ TroykaOLED myOLED(0x3C);
 #define wifi Serial3
 
 #define LOCK_CLOSING_TIMEOUT 5000
+#define BT_RATE 10000
 
 #define VL6180X_ADDRESS 0x29
 
@@ -83,6 +84,7 @@ enum User {
 bool locksOpened[3] = {false, false, false};
 bool locksActuallyOpened[3] = {true, true, true};
 unsigned int locksOpenedAt[3] = {0, 0, 0};
+unsigned int lastBTSendTime = 0;
 
 bool garbageAllowed[3] = {false, false, false};
 bool trashOverfill[3]  = {false, false, false};
@@ -446,6 +448,8 @@ void loop() {
       locksOpened[1] = true;
       locksOpened[2] = true;
   }
+
+  if (millis() - lastBTSendTime > BT_RATE) handleBluetooth();
 
   updateLocks();
 }
